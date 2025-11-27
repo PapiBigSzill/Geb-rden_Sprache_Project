@@ -105,19 +105,53 @@ while True:
             y_ringfinger_basis_index = normalized_landmarks[13][1]
             y_pinky_basis_index = normalized_landmarks[17][1]
 
-            # -- SYMBOLE GESAMT HAND ERKENNUNG --
+            # -- SYMBOLE Zahlen HAND ERKENNUNG --
             faust_code = "00000"   #faust
             eins_code = "01000"    #zeigefinger
             zwei_code = "01100"    #zeige/mittelfinger
             drei_code = "01110"    #zeige/mittel/ringfinger
             vier_code = "01111"    #alle außer daumen
             fuenf_code = "11111"   #alle 5 finger
-            stop_code = "00000"
+            #stop_code = "00000"
+
+            # -- Symbole Buchstaben Hand Erkennung --
+            a = "10000"
+            b = "01111"
+            #TODO: c = ...
+            #TODO: d = ...
+            #TODO: e = ...
+            #TODO: f = ...
+            g = "01000"
+            #TODO: h = ...
+            #TODO: i = ...
+            #TODO: j = ...
+            #TODO: k = ...
+            #TODO: l = ...
+            #TODO: m = ...
+            #TODO: n = ...
+            #TODO: o = ...
+            #TODO: p = ...
+            #TODO: q = ...
+            #TODO: r = ...
+            #TODO: s = ...
+            #TODO: t = ...
+            #TODO: u = ...
+            v = "01100"
+            #TODO: w = ...
+            #TODO: x = ...
+            #TODO: y = ...
+            #TODO: z = ...
+
+
 
             # -- Gebärdensprach-Datenbank --
-            gebaerdensprache_dictionary = {eins_code: "eins", zwei_code: "zwei", drei_code: "drei",
+            gebaerdensprache_dictionary = \
+                {
+                eins_code: "eins", zwei_code: "zwei", drei_code: "drei",
                                            vier_code: "vier", fuenf_code: "fuenf",
-                                           stop_code: "Stop"}
+
+                    a: "a", b: "b", g: "g", v: "v"
+                }
 
             daumen_status = "0"
             zeigefinger_status = "0"
@@ -125,6 +159,18 @@ while True:
             ringfinger_status = "0"
             pinky_status = "0"
 
+            # --- GESTEN-LOGIK: BUCHSTABEN UNTERSCHEIDUNG ---
+            aktueller_buchstaben_code = daumen_status + zeigefinger_status + mittelfinger_status + ringfinger_status + pinky_status
+            if aktueller_buchstaben_code in gebaerdensprache_dictionary:
+                erkannte_gebaerde = gebaerdensprache_dictionary[aktueller_buchstaben_code]
+
+                if erkannte_gebaerde == "a":
+                    pass
+                cv2.putText(frame, f"Buchstabe: {erkannte_gebaerde}", (50, 450),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+            else:
+                cv2.putText(frame, "Buchstabe: ?", (50, 450),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
 
 
             # --- GESTEN-LOGIK: FINGER (4 & 1, 8 & 5, 12 & 9, 16 & 13, 20 & 17) ---
