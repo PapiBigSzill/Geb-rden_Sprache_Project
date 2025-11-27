@@ -169,6 +169,16 @@ while True:
             ringfinger_status = "0"
             pinky_status = "0"
 
+            #---VARIABLEN FÜR WINKELPRÜFUNG FÜR BUCHSTABEN ---
+            erkannter_winkel_status = None
+            x1 = normalized_landmarks[5][0]
+            y1 = normalized_landmarks[5][1]
+            x2 = normalized_landmarks[17][0]
+            y2 = normalized_landmarks[17][1]
+
+            angle_rad = math.atan2(y2 - y1, x2 - x1)
+            angle_deg = math.degrees(angle_rad)
+
             # --- GESTEN-LOGIK: FINGER (4 & 1, 8 & 5, 12 & 9, 16 & 13, 20 & 17) ---
             if (x_daumen_spitze_index > x_daumen_basis_index + 0.04) and (y_daumen_spitze_index < y_zeigefinger_basis_index - 0.05):
                 gesture_daumen_status = "DAUMEN STRECKT"
