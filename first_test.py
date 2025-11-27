@@ -1,6 +1,7 @@
 import cv2
 import mediapipe as mp
 import time
+import math
 
 # 1. MediaPipe Initialisierung
 mp_hands = mp.solutions.hands
@@ -33,6 +34,62 @@ print("Kamera läuft. Bringen Sie Ihre Hand ins Bild und drücken Sie 'q' zum Be
 # Variablen für die FPS-Anzeige (optional)
 pTime = 0
 
+#--------------______DATENBANK_________----------------------
+
+# -- SYMBOLE Zahlen HAND ERKENNUNG --
+faust_code = "00000"   #faust
+eins_code = "01000"    #zeigefinger
+zwei_code = "01100"    #zeige/mittelfinger
+drei_code = "01110"    #zeige/mittel/ringfinger
+vier_code = "01111"    #alle außer daumen
+fuenf_code = "11111"   #alle 5 finger
+#stop_code = "00000"
+
+# -- Symbole Buchstaben Hand Erkennung --
+a = "10000"
+b = "01111"
+#TODO: c = ...
+#TODO: d = ...
+#TODO: e = ...
+#TODO: f = ...
+g = "01000"
+#TODO: h = ...
+#TODO: i = ...
+#TODO: j = ...
+#TODO: k = ...
+#TODO: l = ...
+#TODO: m = ...
+#TODO: n = ...
+#TODO: o = ...
+#TODO: p = ...
+#TODO: q = ...
+#TODO: r = ...
+#TODO: s = ...
+#TODO: t = ...
+#TODO: u = ...
+v = "01100"
+#TODO: w = ...
+#TODO: x = ...
+#TODO: y = ...
+#TODO: z = ...
+
+# -- Gebärdensprach-Dictionary --
+gebaerdensprache_dictionary_zahlen = \
+    {
+    eins_code: "eins",
+    zwei_code: "zwei",
+    drei_code: "drei",
+    vier_code: "vier",
+    fuenf_code: "fuenf",
+    }
+
+gebaerden_sprache_dictionary_buchstaben = \
+    {
+    a: "a",
+    b: "b",
+    g: "g",
+    v: "v"
+    }
 
 while True:
     ret, frame = cam.read()
@@ -105,73 +162,12 @@ while True:
             y_ringfinger_basis_index = normalized_landmarks[13][1]
             y_pinky_basis_index = normalized_landmarks[17][1]
 
-            # -- SYMBOLE Zahlen HAND ERKENNUNG --
-            faust_code = "00000"   #faust
-            eins_code = "01000"    #zeigefinger
-            zwei_code = "01100"    #zeige/mittelfinger
-            drei_code = "01110"    #zeige/mittel/ringfinger
-            vier_code = "01111"    #alle außer daumen
-            fuenf_code = "11111"   #alle 5 finger
-            #stop_code = "00000"
-
-            # -- Symbole Buchstaben Hand Erkennung --
-            a = "10000"
-            b = "01111"
-            #TODO: c = ...
-            #TODO: d = ...
-            #TODO: e = ...
-            #TODO: f = ...
-            g = "01000"
-            #TODO: h = ...
-            #TODO: i = ...
-            #TODO: j = ...
-            #TODO: k = ...
-            #TODO: l = ...
-            #TODO: m = ...
-            #TODO: n = ...
-            #TODO: o = ...
-            #TODO: p = ...
-            #TODO: q = ...
-            #TODO: r = ...
-            #TODO: s = ...
-            #TODO: t = ...
-            #TODO: u = ...
-            v = "01100"
-            #TODO: w = ...
-            #TODO: x = ...
-            #TODO: y = ...
-            #TODO: z = ...
-
-
-
-            # -- Gebärdensprach-Datenbank --
-            gebaerdensprache_dictionary = \
-                {
-                eins_code: "eins", zwei_code: "zwei", drei_code: "drei",
-                                           vier_code: "vier", fuenf_code: "fuenf",
-
-                    a: "a", b: "b", g: "g", v: "v"
-                }
-
+            #--- STATUS INITIALISIERUNG ---
             daumen_status = "0"
             zeigefinger_status = "0"
             mittelfinger_status = "0"
             ringfinger_status = "0"
             pinky_status = "0"
-
-            # --- GESTEN-LOGIK: BUCHSTABEN UNTERSCHEIDUNG ---
-            aktueller_buchstaben_code = daumen_status + zeigefinger_status + mittelfinger_status + ringfinger_status + pinky_status
-            if aktueller_buchstaben_code in gebaerdensprache_dictionary:
-                erkannte_gebaerde = gebaerdensprache_dictionary[aktueller_buchstaben_code]
-
-                if erkannte_gebaerde == "a":
-                    pass
-                cv2.putText(frame, f"Buchstabe: {erkannte_gebaerde}", (50, 450),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
-            else:
-                cv2.putText(frame, "Buchstabe: ?", (50, 450),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
-
 
             # --- GESTEN-LOGIK: FINGER (4 & 1, 8 & 5, 12 & 9, 16 & 13, 20 & 17) ---
             if (x_daumen_spitze_index > x_daumen_basis_index + 0.04) and (y_daumen_spitze_index < y_zeigefinger_basis_index - 0.05):
@@ -182,7 +178,6 @@ while True:
                 gesture_daumen_status = "Daumen gebeugt oder seitlich"
                 color_thumb = (255, 0, 0)
                 daumen_status = "0"
-
             cv2.putText(frame, gesture_daumen_status, (50,100),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, color_thumb, 2, cv2.LINE_AA)
 
@@ -194,7 +189,6 @@ while True:
                 gesture_zeigefinger_status = "Zeigefinger GEBEUGT. 🤏"
                 color_index = (255, 0, 0)  # Blau (Für GEBEUGT)
                 zeigefinger_status = "0"
-
             cv2.putText(frame, gesture_zeigefinger_status, (50, 180),  # Position 100
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, color_index, 2, cv2.LINE_AA)  # FARBVARIABLE VERWENDET
 
@@ -207,9 +201,8 @@ while True:
                 gesture_middle_status = "Mittelfinger gebeugt"
                 color_middle = (255, 0, 0)
                 mittelfinger_status = "0"
-
             cv2.putText(frame, gesture_middle_status, (50, 210),  # NEUE POSITION 180 (KEINE ÜBERLAPPUNG)
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, color_middle, 2, cv2.LINE_AA)  # FARBVARIABLE VERWENDET
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, color_middle, 2, cv2.LINE_AA)  # FARBVARIABLE VERWENDET
 
             if y_ringfinger_spitze_index < y_ringfinger_basis_index - 0.25:
                 gesture_ringfinger_status = "RINGFINGER STRECKT"
@@ -219,7 +212,6 @@ while True:
                 gesture_ringfinger_status = "Ringfinger gebeugt"
                 color_ringfinger = (255, 0, 0)
                 ringfinger_status = "0"
-
             cv2.putText(frame, gesture_ringfinger_status, (50, 250),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, color_ringfinger, 2, cv2.LINE_AA)
 
@@ -231,21 +223,35 @@ while True:
                 gesture_pinky_status = "Pinky gebeugt"
                 color_pinky = (255, 0, 0)
                 pinky_status = "0"
-
             cv2.putText(frame, gesture_pinky_status, (50, 280),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.7, color_pinky, 2, cv2.LINE_AA)
 
             # --Fingerabdruck erstellen -- Abgleich zu Dict--
             aktueller_code = daumen_status + zeigefinger_status + mittelfinger_status + ringfinger_status + pinky_status
             anzahl_gestreckte_finger = aktueller_code.count("1")
+            if aktueller_code in gebaerdensprache_dictionary_zahlen:
+                erkannte_zahl = gebaerdensprache_dictionary_zahlen[aktueller_code]
+                cv2.putText(frame, f"aktuelle Zahl: {erkannte_zahl}", (50, 350),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+            else:
+                cv2.putText(frame, "Aktuelle Zahl: ?", (50, 350),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
             #erkannte Zahl als String
             erkannte_zahl = str(f"Erkannte Anzahl an Finger: {anzahl_gestreckte_finger}")
             cv2.putText(frame, erkannte_zahl, (50, 400), cv2.FONT_HERSHEY_SIMPLEX,
-                        0.7, (0, 0, 0), 4, cv2.LINE_AA)
+                        0.7, (255, 0, 0), 4, cv2.LINE_AA)
 
-            #if aktueller_code in gebaerdensprache_dictionary:
-                #print(aktueller_code)
+            if aktueller_code in gebaerden_sprache_dictionary_buchstaben:
+                erkannte_gebaerde = gebaerden_sprache_dictionary_buchstaben[aktueller_code]
+
+                cv2.putText(frame, f"Buchstabe: {erkannte_gebaerde}", (50, 450),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 4, cv2.LINE_AA)
+
+            else:
+                cv2.putText(frame, "Buchstabe: ?", (50, 450),
+                          cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 4, cv2.LINE_AA)
+
 
             # --- ZEICHNEN (NUR EINMAL) ---
             # Die beiden redundanten Aufrufe wurden entfernt.
@@ -255,8 +261,8 @@ while True:
                 mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=2)
             )
 
-        # Hier könnten Sie später Aktionen wie Tastendrücke (mit pyautogui) einfügen
-        # Beispiel: print("Hand im Frame, Leertaste drücken!")
+    # Hier könnten Sie später Aktionen wie Tastendrücke (mit pyautogui) einfügen
+    # Beispiel: print("Hand im Frame, Leertaste drücken!")
 
     else:
         # Keine Hand im Bild
