@@ -191,9 +191,15 @@ while True:
 
             # --Fingerabdruck erstellen -- Abgleich zu Dict--
             aktueller_code = daumen_status + zeigefinger_status + mittelfinger_status + ringfinger_status + pinky_status
+            anzahl_gestreckte_finger = aktueller_code.count("1")
 
-            if aktueller_code in gebaerdensprache_dictionary:
-                print(aktueller_code)
+            #erkannte Zahl als String
+            erkannte_zahl = str(f"Erkannte Anzahl an Finger: {anzahl_gestreckte_finger}")
+            cv2.putText(frame, erkannte_zahl, (50, 400), cv2.FONT_HERSHEY_SIMPLEX,
+                        0.7, (0, 0, 0), 4, cv2.LINE_AA)
+
+            #if aktueller_code in gebaerdensprache_dictionary:
+                #print(aktueller_code)
 
             # --- ZEICHNEN (NUR EINMAL) ---
             # Die beiden redundanten Aufrufe wurden entfernt.
@@ -222,7 +228,7 @@ while True:
 
     # 6. Anzeige
     cv2.imshow('Hand Detection', frame)
-    cv2.imshow('Face Detection', frame)
+    #cv2.imshow('Face Detection', frame)
 
     # Beenden mit 'q'
     if cv2.waitKey(5) & 0xFF == ord('q'):
