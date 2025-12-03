@@ -2,6 +2,8 @@ import cv2
 import mediapipe as mp
 import time
 import math
+import logging
+
 
 # 1. MediaPipe Initialisierung
 mp_hands = mp.solutions.hands
@@ -36,7 +38,14 @@ pTime = 0
 
 #--------------______DATENBANK_________----------------------
 
+
 # -- SYMBOLE Zahlen HAND ERKENNUNG --
+
+#--Erkennung von G KONSTANTEN
+WINKEL_SCHWELLE_HORIZONTAL = 30
+WINKEL_SCHWELLE_VERTICAL_MIN = 60
+WINKEL_SCHWELLE_VERITCAL_MAX = 120
+
 faust_code = "00000"   #faust
 eins_code = "01000"    #zeigefinger
 zwei_code = "01100"    #zeige/mittelfinger
@@ -52,7 +61,7 @@ b = "01111"
 #TODO: d = ...
 #TODO: e = ...
 #TODO: f = ...
-g = "01000"
+#g = "01000"
 #TODO: h = ...
 #TODO: i = ...
 #TODO: j = ...
@@ -76,7 +85,7 @@ v = "01100"
 # -- Gebärdensprach-Dictionary --
 gebaerdensprache_dictionary_zahlen = \
     {
-    eins_code: "eins",
+    #eins_code: "eins",
     zwei_code: "zwei",
     drei_code: "drei",
     vier_code: "vier",
@@ -87,7 +96,7 @@ gebaerden_sprache_dictionary_buchstaben = \
     {
     a: "a",
     b: "b",
-    g: "g",
+    #g: "g",
     v: "v"
     }
 
@@ -162,22 +171,18 @@ while True:
             y_ringfinger_basis_index = normalized_landmarks[13][1]
             y_pinky_basis_index = normalized_landmarks[17][1]
 
+            #Landmarks für G, Winkel der Handfläche (Handgelenk - Mittelfingerspitze)
+            #x1 = hand_landmarks[0].x
+            #y1 = hand_landmarks[0].y
+            #x2 = hand_landmarks[9].x
+            #y2 = hand_landmarks[9].y
+
             #--- STATUS INITIALISIERUNG ---
             daumen_status = "0"
             zeigefinger_status = "0"
             mittelfinger_status = "0"
             ringfinger_status = "0"
             pinky_status = "0"
-
-            #---VARIABLEN FÜR WINKELPRÜFUNG FÜR BUCHSTABEN ---
-            erkannter_winkel_status = None
-            x1 = normalized_landmarks[5][0]
-            y1 = normalized_landmarks[5][1]
-            x2 = normalized_landmarks[17][0]
-            y2 = normalized_landmarks[17][1]
-
-            angle_rad = math.atan2(y2 - y1, x2 - x1)
-            angle_deg = math.degrees(angle_rad)
 
             # --- GESTEN-LOGIK: FINGER (4 & 1, 8 & 5, 12 & 9, 16 & 13, 20 & 17) ---
             if (x_daumen_spitze_index > x_daumen_basis_index + 0.04) and (y_daumen_spitze_index < y_zeigefinger_basis_index - 0.05):
@@ -238,7 +243,49 @@ while True:
 
             # --Fingerabdruck erstellen -- Abgleich zu Dict--
             aktueller_code = daumen_status + zeigefinger_status + mittelfinger_status + ringfinger_status + pinky_status
+
+            erkannter_buchstabe = "?"
+            erkannte_zahl = "?"
+            winkel_anzeige = ""
+
+            if aktueller_code == eins_code:
+                x1 = normalized_landmarks[5][0]; y1 = normalized_landmarks[5][1]
+                x2 = normalized_landmarks[17][0]; y2 = normalized_landmarks[17][1]
+                angle_degree = math.degrees(math.atan2(y2 - y1, x2 - x1))
+                winkel_anzeige = f" ( {int(angle_degree)})"
+
+                if abs(angle_degree) < 25:
+                    erkannter_buchstabe = "G"
+                elif angle_degree > 60 and angle_degree < 120:
+                    erkannte_zahl = "eins"
+                else:
+                    erkannter_buchstabe = " G / 1 ? "
+            elif aktueller_code in gebaerden_sprache_dictionary_buchstaben:
+                erkannter_buchstabe = gebaerden_sprache_dictionary_buchstaben[aktueller_code]
+            elif aktueller_code in gebaerdensprache_dictionary_zahlen:
+                erkannte_zahl = gebaerdensprache_dictionary_zahlen[aktueller_code]
+
+            if erkannte_zahl != "?":
+                cv2.putText(frame, f"Zahl: {erkannte_zahl}{winkel_anzeige}", (50, 350),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
+            else:
+                cv2.putText(frame, "Zahl: -", (50, 350),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (100,100,100), 2, cv2.LINE_AA)
+
+
+            if erkannter_buchstabe != "?":
+                cv2.putText(frame, f"Symbol: {erkannter_buchstabe}{winkel_anzeige}", (50, 450),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
+            else:
+                cv2.putText(frame, "Symbol: ?", (50, 450),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
+
+
             anzahl_gestreckte_finger = aktueller_code.count("1")
+            erkannte_zahl_str = str(f"Erk. Finger: {anzahl_gestreckte_finger}")
+            cv2.putText(frame, erkannte_zahl_str, (50, 400),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2, cv2.LINE_AA)
+            """
             if aktueller_code in gebaerdensprache_dictionary_zahlen:
                 erkannte_zahl = gebaerdensprache_dictionary_zahlen[aktueller_code]
                 cv2.putText(frame, f"aktuelle Zahl: {erkannte_zahl}", (50, 350),
@@ -262,7 +309,7 @@ while True:
                 cv2.putText(frame, "Buchstabe: ?", (50, 450),
                           cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 4, cv2.LINE_AA)
 
-
+            """
             # --- ZEICHNEN (NUR EINMAL) ---
             # Die beiden redundanten Aufrufe wurden entfernt.
             mp_drawing.draw_landmarks(
