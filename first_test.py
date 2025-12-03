@@ -4,6 +4,8 @@ import time
 import math
 import logging
 
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 # 1. MediaPipe Initialisierung
 mp_hands = mp.solutions.hands
@@ -172,10 +174,14 @@ while True:
             y_pinky_basis_index = normalized_landmarks[17][1]
 
             #Landmarks für G, Winkel der Handfläche (Handgelenk - Mittelfingerspitze)
-            #x1 = hand_landmarks[0].x
-            #y1 = hand_landmarks[0].y
-            #x2 = hand_landmarks[9].x
-            #y2 = hand_landmarks[9].y
+            logging.info("Starting test")
+
+            x1 = hand_landmarks[0].x
+            y1 = hand_landmarks[0].y
+            x2 = hand_landmarks[9].x
+            y2 = hand_landmarks[9].y
+            #landmark_error = print(hand_landmarks.logger(x1, y1, x2, y2))
+            logger.info("Finnished")
 
             #--- STATUS INITIALISIERUNG ---
             daumen_status = "0"
